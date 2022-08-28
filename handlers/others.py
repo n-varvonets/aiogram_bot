@@ -4,7 +4,14 @@ from aiogram import types, Dispatcher
 
 
 # @dp.message_handler()
+async def empty_sms(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Нет такой командьі')
+    await message.delete()
+
+
+# @dp.message_handler()
 async def censor_words(message: types.Message):
+    """данная функция в смс от пользователя убирет заданньій мат"""
     if {i.lower().translate(str.maketrans('', '', string.punctuation)) for i in message.text.split(' ')} \
             .intersection(set(json.load(open('cenzured.json')))) != set():
         await message.reply('Матьі запрещеньі')
@@ -16,4 +23,9 @@ async def censor_words(message: types.Message):
 
 
 def register_handlers_other(dp: Dispatcher):
-    dp.register_message_handler(censor_words)
+
+    dp.register_message_handler(empty_sms)  # если пришла несуществующая команда - она удаляется из общего
+    # и бот отправляет в лс предпреждение об єтом
+
+    # dp.register_message_handler(censor_words)
+

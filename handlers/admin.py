@@ -122,6 +122,7 @@ def register_handlres_admin(dp: Dispatcher):
     # 2.2)для отменьі ввода формь(порядок - ВАЖЕН. для работьі во всей формьі - СРАЗУ после назначения состяния..set()):
     dp.register_message_handler(cancel_handler, state="*", commands='отмена')
     dp.register_message_handler(cancel_handler, Text(equals='отмена', ignore_case=True), state="*")
+    # ignore_case=True - неважно какой регистр. + можно фильровать текст на (КЛЮЧЕВОЕ СЛОВО в тексте) через lamda (https://i.imgur.com/y5lwtTP.png)
     # 2.3) продолжаем работу состояния памяти формьі
     dp.register_message_handler(load_photo, content_types=['photo'], state=FSMAdmin.photo)
     dp.register_message_handler(load_name, state=FSMAdmin.name)
