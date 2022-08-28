@@ -1,6 +1,9 @@
 from aiogram.utils import executor
 from create_bot import dp
 
+"""ниже файл входа - тот которьій мьі запускаем во время старта pooling"""
+
+
 async def on_startup(_):
     print('Бот вышел в онлайн')
 
