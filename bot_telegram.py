@@ -2,6 +2,7 @@ from aiogram.utils import executor
 from create_bot import dp
 from data_base import sql_db
 
+
 async def on_startup(_):
     print('Бот вышел в онлайн')
     sql_db.sql_start()  # подключаемся к нашей бд

@@ -4,8 +4,9 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.filters import Text
 from create_bot import dp, bot
-from data_base.sql_db import sql_add_command, sql_read_all_clients
+from data_base.sql_db import sql_add_command, sql_read_all_clients, sql_fetch_all_clients, sql_delete_client
 from keyboards import admin_kb
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 ID = None  # для модератора при вьзове командьі 'moderator'
 
@@ -111,13 +112,47 @@ async def load_age(message: types.Message, state: FSMContext):
     # до вьізва ниже метода финиш() нужно передать/записать данньіе, а то пропадут..
     await sql_add_command(state)
 
+    await message.answer('Запись о клиенте добавлена')  # уведомляем админа об успехе создания записи
+
     await state.finish()
 
 
-# @dp.message_handler(commands=['clients_data'])
+# @dp.message_handler(commands=['get_our_clients'])
 async def clients_catalog(message: types.Message):
     """создадим комнду на посмотреть инфу обо всех пользователей"""
     await sql_read_all_clients(message)
+
+
+# Для удаления адсмином записи в бд потребуется прописать message_handler и callback_query_handler:
+# @dp.message_handler(commands=['/Удалить_клиента'])
+async def delete_item(message: types.Message):
+    """отобразим перед удалением всех клиентов и отправим в личку инлайн кнопку на вьізов колбека используя хендлер"""
+    if message.from_user.id == ID:
+        all_clients = await sql_fetch_all_clients()
+        for client in all_clients:
+            # 1) отправляем нашему администратору в личку сообщение о продукте
+            await bot.send_photo(message.from_user.id, client[0],
+                                 f'Имя: {client[1]}\nОписание: {client[2]}\nВозраст: {client[-1]}')
+            # 2) отправляем инлайн кнопку в лчику, по которой если нажать активируется хенлер колбєка удаления записи
+            await bot.send_message(
+                message.from_user.id,
+                text='^^^some warning text~~',
+                reply_markup=InlineKeyboardMarkup().add(
+                    InlineKeyboardButton(
+                        text=f'Удалить клиента {client[1]}?',
+                        callback_data=f'del {client[1]}'
+                    )
+                )
+            )
+
+
+@dp.callback_query_handler(lambda x: x.data and x.data.startswith('del '))  # callback НЕ РЕГИСТРИРУЕТСЯ в хендлерах
+async def del_item_callback_run(
+        callback: types.CallbackQuery):  # callback - єтот параметр можно навзать как угодно,главное указать types.CallbackQuery
+    # 1)вьполним запрос на удаление записи
+    await sql_delete_client(callback.data.replace('del ', ''))
+    # 2) отвечаем телеграму что запрос вьіполнен и паралельно указівает какой именно запрос вьіполненнно
+    await callback.answer(text=f"{callback.data.replace('del ', '')} удален(-а)", show_alert=True)
 
 
 def register_handlres_admin(dp: Dispatcher):
@@ -135,5 +170,11 @@ def register_handlres_admin(dp: Dispatcher):
     dp.register_message_handler(load_description, state=FSMAdmin.description)
     dp.register_message_handler(load_age, state=FSMAdmin.age)
     # 2.4) Регистрируем меню
-    dp.register_message_handler(clients_catalog, commands=['clients_data'])
+    # dp.register_message_handler(clients_catalog, commands=['get_our_clients'])
+    dp.register_message_handler(clients_catalog, lambda x: 'get' and 'our' and 'clients' in x.text)
+    # 2.5) Жобавим админу возможность удалить клиента(продукт)
+    dp.register_message_handler(delete_item, commands=['Удалить_клиента'])
+
+
+
 

@@ -28,3 +28,13 @@ async def sql_add_command(state):
 async def sql_read_all_clients(message):
     for ret in cur.execute('SELECT * FROM clients_data').fetchall():
         await bot.send_photo(message.from_user.id, ret[0], f'Имя: {ret[1]}\nОписание: {ret[2]}\nage {ret[-1]}')
+
+
+async def sql_fetch_all_clients():
+    return cur.execute('SELECT * FROM clients_data').fetchall()
+
+
+async def sql_delete_client(client):
+    cur.execute('DELETE FROM clients_data WHERE name == ?', (client, ))
+    base.commit()
+
