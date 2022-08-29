@@ -15,13 +15,7 @@ async def pizza_open_command(message: types.Message):
 
 
 async def pizza_place_command(message: types.Message):
-    await bot.send_message(message.from_user.id, 'ул. Колбасная 15')
-
-
-# @dp.message_handler(commands=['Меню'])
-# async def pizza_menu_command(message : types.Message):
-# 	for ret in cur.execute('SELECT * FROM menu').fetchall():
-# 	   await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\nОписание: {ret[2]}\nЦена {ret[-1]}')
+    await bot.send_message(message.from_user.id, 'ул. Больничная, 15')
 
 
 def register_handlers_client(dp: Dispatcher):

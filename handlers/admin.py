@@ -4,6 +4,8 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.filters import Text
 from create_bot import dp, bot
+from data_base.sql_db import sql_add_command, sql_read_all_clients
+from keyboards import admin_kb
 
 ID = None  # для модератора при вьзове командьі 'moderator'
 
@@ -16,7 +18,7 @@ class FSMAdmin(StatesGroup):
     photo = State()
     name = State()
     description = State()
-    price = State()
+    age = State()
 
 
 # @dp.message_handler(commands['moderator'], is_chat_admin=True)
@@ -31,7 +33,8 @@ async def make_changes_command(message: types.Message):
     """
     global ID
     ID = message.from_user.id
-    await bot.send_message(message.from_user.id, "Привет, мой Бог!")  # , reply_markup=)
+    await bot.send_message(message.from_user.id, "Привет, мой Бог!",
+                           reply_markup=admin_kb.button_case_admin)  # reply_markup - отправляем для него клава
     await message.delete()
 
 
@@ -40,7 +43,7 @@ async def fsm_cmd_start(message: types.Message):
     """начало диалога загрузки нового пункта меню + проверка на модератора(админа группьі)"""
     if message.from_user.id == ID:
         await FSMAdmin.photo.set()  # ВАЖНО а) здесь мьі указіваем какой хендлер дергать FSMAdmin.photo
-        await message.reply('Загрузите фото')
+        await message.reply('Загрузите свое фото')
 
 
 # @dp.message_handler(state="*", commands='отмена')
@@ -93,32 +96,35 @@ async def load_description(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['description'] = message.text
         await FSMAdmin.next()
-        await message.reply('Введите price')
+        await message.reply('Введите age')
 
 
-# @dp.message_handler(state=FSMAdmin.price)
-async def load_price(message: types.Message, state: FSMContext):
+# @dp.message_handler(state=FSMAdmin.age)
+async def load_age(message: types.Message, state: FSMContext):
     """
     таким же образом с ценой FSMAdmin + записьіваем наш словарь в
     машинной памяти (бд или сейчас как пример в паямть системьі)
     """
     async with state.proxy() as data:
-        data['price'] = float(message.text)
+        data['age'] = float(message.text)
 
     # до вьізва ниже метода финиш() нужно передать/записать данньіе, а то пропадут..
-    async with state.proxy() as data:
-        await message.reply(str(data))
-
-    # sql_add(state)
+    await sql_add_command(state)
 
     await state.finish()
+
+
+# @dp.message_handler(commands=['clients_data'])
+async def clients_catalog(message: types.Message):
+    """создадим комнду на посмотреть инфу обо всех пользователей"""
+    await sql_read_all_clients(message)
 
 
 def register_handlres_admin(dp: Dispatcher):
     # 1)проверка на админа:
     dp.register_message_handler(make_changes_command, commands=['moderator'], is_chat_admin=True)
     # 2.1)наша сама форма/спсиок/память_маш_состояния, которую последовательно заполняем:
-    dp.register_message_handler(fsm_cmd_start, commands=['Загрузить'], state=None)
+    dp.register_message_handler(fsm_cmd_start, commands=['Загрузить_клиента'], state=None)
     # 2.2)для отменьі ввода формь(порядок - ВАЖЕН. для работьі во всей формьі - СРАЗУ после назначения состяния..set()):
     dp.register_message_handler(cancel_handler, state="*", commands='отмена')
     dp.register_message_handler(cancel_handler, Text(equals='отмена', ignore_case=True), state="*")
@@ -127,5 +133,7 @@ def register_handlres_admin(dp: Dispatcher):
     dp.register_message_handler(load_photo, content_types=['photo'], state=FSMAdmin.photo)
     dp.register_message_handler(load_name, state=FSMAdmin.name)
     dp.register_message_handler(load_description, state=FSMAdmin.description)
-    dp.register_message_handler(load_price, state=FSMAdmin.price)
+    dp.register_message_handler(load_age, state=FSMAdmin.age)
+    # 2.4) Регистрируем меню
+    dp.register_message_handler(clients_catalog, commands=['clients_data'])
 

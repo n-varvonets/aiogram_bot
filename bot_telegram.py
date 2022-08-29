@@ -1,11 +1,14 @@
 from aiogram.utils import executor
 from create_bot import dp
+from data_base import sql_db
 
 async def on_startup(_):
     print('Бот вышел в онлайн')
+    sql_db.sql_start()  # подключаемся к нашей бд
 
 
 from handlers import client, admin, others
+
 # и теперь перед запуском pooling executer-a вьізьіваем наши уже зареганнье хендлерьі из импортированньіх модулей,
 # тем самьім разделив догику вьіполнения попакетно
 client.register_handlers_client(dp)  # передаем в нашу функцию dispatcher, т.к. он в ней используется
