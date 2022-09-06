@@ -1,3 +1,0 @@
-нужно активирогвать пользовательскую переменную TOKEN
-
-export TOKEN='5688669235:AAFtBqD97yzmr_aP4r2QUPOHVbWagiCQ2DU'
