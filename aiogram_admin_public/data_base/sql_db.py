@@ -1,6 +1,7 @@
 import sqlite3 as sql
 from create_bot import bot
 
+
 def sql_start():
     """
     Для примера возьмем sql3 - файловая бд в оперативной памяти.
@@ -35,6 +36,5 @@ async def sql_fetch_all_clients():
 
 
 async def sql_delete_client(client):
-    cur.execute('DELETE FROM clients_data WHERE name == ?', (client, ))
+    cur.execute('DELETE FROM clients_data WHERE name == ?', (client,))
     base.commit()
-
