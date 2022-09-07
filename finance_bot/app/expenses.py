@@ -1,13 +1,13 @@
 """ Работа с расходами — их добавление, удаление, статистики"""
 import datetime
 import re
-from typing import List, NamedTuple, Optional
-
 import pytz
 
-import db
-import exceptions
-from categories import Categories
+from typing import List, NamedTuple, Optional
+from db import db
+
+from exceptions import exceptions
+from finance_bot.app.categories import Categories
 
 
 class Message(NamedTuple):
@@ -62,7 +62,18 @@ def get_today_statistics() -> str:
 
 
 def get_month_statistics() -> str:
-    """Возвращает строкой статистику расходов за текущий месяц"""
+    """Returns expense statistics for the current month as a string"""
+
+    total_income, month_planing_base_expenses = _get_month_budget()
+    if total_income == 0 and month_planing_base_expenses == 0:
+        return (
+
+                "⚠️ - для проведення базової аналітики Ваших витрат за сьогодні(/today) чи за поточний "
+                "місяць(/month) - мені для разрахунку потрібно дізнатися розмір Вашого місячного бюджету\n\n"
+                "/set_budget - встановити місячний бюджет\n"
+                "/help- дізнатися більше про базову аналітику та місячний бюджет"
+                )
+
     now = _get_now_datetime()
     first_day_of_month = f'{now.year:04d}-{now.month:02d}-01'
     cursor = db.get_cursor()
@@ -71,39 +82,40 @@ def get_month_statistics() -> str:
     result = cursor.fetchone()
     if not result[0]:
         return "У цьому місяці поки що нема витрат"
-    all_today_expenses = result[0]
+    all_month_expenses = result[0]
     cursor.execute(f"select sum(amount) "
                    f"from expense where date(created) >= '{first_day_of_month}' "
                    f"and category_codename in (select codename "
                    f"from category where is_base_expense=true)")
     result = cursor.fetchone()
-    base_today_expenses = result[0] if result[0] else 0
+    base_month_expenses = result[0] if result[0] else 0
+
     return (f"Витрати в поточному місяці:\n"
-            f"всього — {all_today_expenses} грн.\n"
-            f"базові — {base_today_expenses} грн з "
-            f"{now.day * _get_budget()} грн місячної норми")
+            f"всього — {all_month_expenses} грн.\n"
+            f"базові — {base_month_expenses} грн з "
+            f" грн місячної норми")
 
 
-def last() -> List[Expense]:
-    """Возвращает последние несколько расходов"""
+def _get_last_five_expenses():  #  -> List[(Expense, List(str))]
+    """Returns the last few expenses"""
     cursor = db.get_cursor()
     cursor.execute(
-        "select e.id, e.amount, c.name "
+        "select e.id, e.amount, c.name, e.raw_text "
         "from expense e left join category c "
         "on c.codename=e.category_codename "
         "order by created desc limit 10")
     rows = cursor.fetchall()
-    last_expenses = [Expense(id=row[0], amount=row[1], category_name=row[2]) for row in rows]
-    return last_expenses
+    last_5_expenses_with_raw_text = [(Expense(id=row[0], amount=row[1], category_name=row[2]), row[3]) for row in rows]
+    return last_5_expenses_with_raw_text
 
 
 def delete_expense(row_id: int) -> None:
-    """Удаляет сообщение по его идентификатору"""
+    """Deletes a message by its id"""
     db.delete("expense", row_id)
 
 
 def _parse_message(raw_message: str) -> Message:
-    """Парсит текст пришедшего сообщения о новом расходе."""
+    """Parsing content in incoming message about a new expense."""
     regexp_result = re.match(r"([\d ]+) (.*)", raw_message)
     if not regexp_result or not regexp_result.group(0) \
             or not regexp_result.group(1) or not regexp_result.group(2):
@@ -124,12 +136,17 @@ def _get_now_formatted() -> str:
 def _get_now_datetime() -> datetime.datetime:
     """Возвращает сегодняшний datetime с учётом времненной зоны Мск."""
     tz = pytz.timezone("Europe/Moscow")
+
+    # try:
+    #     tz1 = pytz.timezone("Europe/Kyiv")
+    #     now = datetime.datetime.now(tz1)
+    #     del tz1.tzinfo
+    # except:
+    #     print('check attr tzinfo')
     now = datetime.datetime.now(tz)
     return now
 
 
 def _get_month_budget():
-    """Возвращает total_income, month_planing_base_expenses"""
-    i, b = tuple(db.fetchall("budget", ["total_income", "month_planing_base_expenses"])[-1])
-    print(i, b)
-    print(i, b)
+    """Return current values of month budjet(total_income, month_planing_base_expenses)"""
+    return tuple(db.fetchall("budget", ["total_income", "month_planing_base_expenses"])[-1].values())

@@ -1,7 +1,7 @@
 """Работа с категориями расходов"""
 from typing import Dict, List, NamedTuple
-
-import db
+from aiogram.dispatcher import Dispatcher
+from db import db
 
 
 class Category(NamedTuple):
@@ -61,3 +61,7 @@ class Categories:
         if not finded:
             finded = other_category
         return finded
+
+
+def register_handlres_categories(dp: Dispatcher):
+    pass

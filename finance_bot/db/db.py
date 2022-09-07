@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 
 import sqlite3
 
-conn = sqlite3.connect(os.path.join("db", "finance.db"))
+conn = sqlite3.connect(os.path.join("", "db/finance.db"))
 cursor = conn.cursor()
 
 
@@ -51,7 +51,7 @@ def get_cursor():
 
 def _init_db():
     """Инициализирует БД"""
-    with open("createdb.sql", "r") as f:
+    with open("db/createdb.sql", "r") as f:
         sql = f.read()
     cursor.executescript(sql)
     conn.commit()
