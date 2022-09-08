@@ -42,6 +42,17 @@ def add_expense(raw_message: str) -> Expense:
 
 def get_today_statistics() -> str:
     """Возвращает строкой статистику расходов за сегодня"""
+
+    total_income, month_planing_base_expenses = _get_month_budget()
+    if total_income == 0 and month_planing_base_expenses == 0:
+        return (
+
+                "⚠️ -  вкажіть Ваш місячний бюджет для отримання доступу до\n"
+                "перегляду статистики за сьогодні(/today) чи за поточний місяць(/month) \n\n"
+                "/set_budget - встановити місячний бюджет\n"
+                "/help- дізнатися більше про статистику та місячний бюджет"
+                )
+
     cursor = db.get_cursor()
     cursor.execute("select sum(amount)"
                    "from expense where date(created)=date('now', 'localtime')")
@@ -68,10 +79,10 @@ def get_month_statistics() -> str:
     if total_income == 0 and month_planing_base_expenses == 0:
         return (
 
-                "⚠️ - для проведення базової аналітики Ваших витрат за сьогодні(/today) чи за поточний "
-                "місяць(/month) - мені для разрахунку потрібно дізнатися розмір Вашого місячного бюджету\n\n"
+                "⚠️ -  вкажіть Ваш місячний бюджет для отримання доступу до\n"
+                "перегляду статистики за сьогодні(/today) чи за поточний місяць(/month) \n\n"
                 "/set_budget - встановити місячний бюджет\n"
-                "/help- дізнатися більше про базову аналітику та місячний бюджет"
+                "/help- дізнатися більше про статистику та місячний бюджет"
                 )
 
     now = _get_now_datetime()
