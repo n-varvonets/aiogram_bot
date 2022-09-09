@@ -1,2 +1,1 @@
-from keyboards.cleint_kb import kb_client
-from keyboards.admin_kb import button_case_admin
+from keyboards.kb_client import kb_client
