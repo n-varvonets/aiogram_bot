@@ -1,12 +1,12 @@
 """ Работа с расходами — их добавление, удаление, статистики"""
 import datetime
 import re
-
+from app import msg_answers
 from typing import NamedTuple, Optional
 from db import db
 
 from exceptions import exceptions
-from finance_bot.app.categories import Categories
+from app.categories import Categories
 
 
 class Message(NamedTuple):
@@ -44,13 +44,7 @@ def get_today_statistics() -> str:
 
     total_income, month_planing_base_expenses = _get_month_budget()
     if total_income == 0 and month_planing_base_expenses == 0:
-        return (
-
-                "⚠️ -  вкажіть Ваш місячний бюджет для отримання доступу до\n"
-                "перегляду статистики за сьогодні(/today) чи за поточний місяць(/month) \n\n"
-                "/set_budget - встановити місячний бюджет\n"
-                "/help- дізнатися більше про статистику та місячний бюджет"
-                )
+        return msg_answers.today_1
 
     cursor = db.get_cursor()
     cursor.execute("select sum(amount)"

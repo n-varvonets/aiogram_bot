@@ -51,7 +51,9 @@ def get_cursor():
 
 def _init_db():
     """Инициализирует БД"""
-    with open("/home/db/createdb.sql", "r") as f:
+    # path_to_db_sql = "/home/db/createdb.sql"  # for docker
+    path_to_db_sql = "/home/nick/PycharmProjects/iogram_bot/finance_bot/db/createdb.sql"  # for local
+    with open(path_to_db_sql, "r") as f:
         sql = f.read()
     cursor.executescript(sql)
     conn.commit()
