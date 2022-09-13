@@ -1,5 +1,5 @@
 import logging
-from finance_bot.app.create_bot import dp
+from app.create_bot import dp
 from aiogram import executor
 from db import db
 
@@ -12,6 +12,10 @@ async def on_startup(_):
 
 
 from handlers import client, budjet
+from callbacks import client_calls, budjet_calls
+
+client_calls.register_clients_callbacks(dp)
+budjet_calls.register_budjet_callbacks(dp)
 
 budjet.register_handlres_budjet(dp)
 client.register_handlres_clients(dp)
