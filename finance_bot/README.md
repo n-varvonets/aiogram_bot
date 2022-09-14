@@ -31,6 +31,65 @@ docker exec -ti tg bash
 ```
 docker exec -ti tg bash
 sqlite3 /home/db/finance.db
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+":{L ?>['po/;.lmnj hb]'[po;lkijuyh
 ```
 
 
