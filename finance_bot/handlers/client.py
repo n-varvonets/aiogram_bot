@@ -18,7 +18,7 @@ async def send_welcome(message: types.Message):
 
     await message.answer(msg_answers.start_back_menu_2,
                          # reply_markup=kb_client
-                         reply_markup=client_btns.welcome_btns
+                         reply_markup=client_btns.welcome_btns_block
                          )
 
 
@@ -62,7 +62,8 @@ async def month_statistics(message: types.Message):
         answer_message = expenses.get_month_statistics()
         await message.answer(answer_message, reply_markup=client_btns.back_to_main_btn)
     except:
-        await message.answer("")
+        await message.answer("Ще не зроблено жодної витрати",
+                                      reply_markup=client_btns.back_to_main_and_set_budjet_btn)
 
 
 async def list_expenses(message: types.Message):

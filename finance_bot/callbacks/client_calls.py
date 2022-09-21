@@ -7,12 +7,18 @@ from aiogram.dispatcher import Dispatcher
 
 
 async def back_to_main_menu_cb(callback: types.CallbackQuery):
-    """Sends a welcome message"""
-
+    """Sends a welcome message depend on budjet state"""
     await callback.message.answer(msg_answers.start_back_menu_1)
-    await callback.message.answer(msg_answers.start_back_menu_2,
-                                  # reply_markup=kb_client
-                                  reply_markup=client_btns.welcome_btns)
+    total_income, month_planing_base_expenses = expenses._get_month_budget()
+    if total_income == 0 and month_planing_base_expenses == 0:
+
+        await callback.message.answer(msg_answers.start_back_menu_2,
+                                      # reply_markup=kb_client
+                                      reply_markup=client_btns.welcome_btns_block)
+    else:
+        await callback.message.answer(msg_answers.start_back_menu_2,
+                                      # reply_markup=kb_client
+                                      reply_markup=client_btns.welcome_btns_unblocked)
     await callback.answer()
 
 
@@ -55,10 +61,12 @@ async def month_statistics_cb(callback: types.CallbackQuery):
     """Sends spending statistics of the current month"""
     try:
         answer_message = expenses.get_month_statistics()
-        await callback.message.answer(answer_message, reply_markup=client_btns.back_to_main_and_set_budjet_btn)
+        await callback.message.answer(answer_message, reply_markup=client_btns.back_to_main_btn)
         await callback.answer()
     except:
-        await callback.message.answer("")
+        await callback.message.answer("Ще не зроблено жодної витрати", reply_markup=client_btns.back_to_main_btn)
+        await callback.answer()
+
 
 
 async def categories_list_cb(callback: types.CallbackQuery):
@@ -74,9 +82,25 @@ async def categories_list_cb(callback: types.CallbackQuery):
     await callback.answer()
 
 
+async def get_budget(callback: types.CallbackQuery):
+    total_income, month_planing_base_expenses = expenses._get_month_budget()
+    if total_income == 0 and month_planing_base_expenses == 0:
+        await callback.message.answer("Ви ще вказали власний бюджет")
+        await callback.answer()
+    else:
+        answer_msg = f"Загальний Ваш місячний дохід становить {total_income} грн.\n" \
+                     f"Встановлена норма базових витрат - {month_planing_base_expenses} грн"
+        await callback.message.answer(answer_msg)
+        await callback.answer()
+
+
+
+
+
 def register_clients_callbacks(dp: Dispatcher):
     dp.register_callback_query_handler(back_to_main_menu_cb, text='main_menu')
     dp.register_callback_query_handler(help_cb, text='help_cb_btn')
+    dp.register_callback_query_handler(get_budget, text='get_budget_cb_btn')
     dp.register_callback_query_handler(today_statistics_cb, text='today_cb_btn')
     dp.register_callback_query_handler(list_expenses_cb, text='expenses_cb_btn')
     dp.register_callback_query_handler(month_statistics_cb, text='month_cb_btn')

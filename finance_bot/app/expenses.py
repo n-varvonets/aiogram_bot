@@ -79,14 +79,14 @@ def get_month_statistics() -> str:
                 )
 
     now = _get_now_datetime()
-    first_day_of_month = f'{now.year:04d}-{now.month:02d}-01'
+    first_day_of_month = f'{now[:7]}-01'
     cursor = db.get_cursor()
     cursor.execute(f"select sum(amount) "
                    f"from expense where date(created) >= '{first_day_of_month}'")
-    result = cursor.fetchone()
-    if not result[0]:
+    month_expenses = cursor.fetchone()
+    if not month_expenses[0]:
         return "У цьому місяці поки що нема витрат"
-    all_month_expenses = result[0]
+    all_month_expenses = month_expenses[0]
     cursor.execute(f"select sum(amount) "
                    f"from expense where date(created) >= '{first_day_of_month}' "
                    f"and category_codename in (select codename "
@@ -94,10 +94,12 @@ def get_month_statistics() -> str:
     result = cursor.fetchone()
     base_month_expenses = result[0] if result[0] else 0
 
+    total_income, month_planing_base_expenses = _get_month_budget()
+
     return (f"Витрати в поточному місяці:\n"
             f"всього — {all_month_expenses} грн.\n"
-            f"базові — {base_month_expenses} грн з "
-            f" грн місячної норми")
+            f"базові — {base_month_expenses} грн. з {month_planing_base_expenses} грн місячної норми\n\n"
+            f"залишок коштів на місяць - {total_income - all_month_expenses}")
 
 
 def _get_last_five_expenses():  #  -> List[(Expense, List(str))]

@@ -1,6 +1,6 @@
 import os
 from typing import Dict, List, Tuple
-
+import time
 import sqlite3
 
 PATH_TO_DB_SQL = "/home/nick/PycharmProjects/iogram_bot/code_writer/db/createdb.sql"  # for local
@@ -74,3 +74,33 @@ class Database:
             for row in result:
                 nickname = str(row[0])
             return nickname
+
+    def set_time_subscription(self, user_id, time_sub):
+        """set time subscription of user"""
+        with self.connection:
+            return self.cursor.execute("UPDATE users SET time_sub = ? WHERE user_id = ?", (str(time_sub), user_id))
+
+    def get_time_subscription(self, user_id):
+        """get subscription of user"""
+        with self.connection:
+            result = self.cursor.execute("SELECT time_sub FROM users WHERE user_id = ?", (
+                user_id,)).fetchall()
+            for row in result:
+                if row[0] is not None:
+                    time_sub = int(row[0])
+            return time_sub
+
+    def get_time_subscription_bool(self, user_id):
+        """get subscription of user"""
+        with self.connection:
+            result = self.cursor.execute("SELECT time_sub FROM users WHERE user_id = ?", (user_id,)).fetchall()
+            for row in result:
+                if row[0] is not None:
+                    time_sub = row[0]
+
+
+            if int(time_sub) > (time.time()):
+                # если время подписки  больше нынешнего - возращаем тру - т.е. подписка есть
+                return True
+            else:
+                return False
