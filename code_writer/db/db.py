@@ -98,7 +98,6 @@ class Database:
                 if row[0] is not None:
                     time_sub = row[0]
 
-
             if int(time_sub) > (time.time()):
                 # если время подписки  больше нынешнего - возращаем тру - т.е. подписка есть
                 return True

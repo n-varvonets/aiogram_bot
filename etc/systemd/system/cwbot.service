@@ -1,0 +1,8 @@
+[Service]
+WorkingDirectory=/home/ubuntu/code_writer/
+User=ubuntu
+ExecStart=/home/ubuntu/code_writer/venv/bin/python server.py
+
+[Install]
+WantedBy=multi-user.target
+EOF

@@ -31,9 +31,25 @@ docker exec -ti tg bash
 ```
 docker exec -ti tg bash
 sqlite3 /home/db/finance.db
+```
 
+Запустить на сервере прилажуху нужно создать демон(как пример cwbot.service) по роуту:
 
+```
+/etc/systemd/system/
+чtрез vim cwbot.service и вписать туда команды что в примере локального проекта
+```
+Добавляем наш сервис в автозапуск и стартуем его: 
 
+```
+sudo systemctl enable cwbot
+sudo systemctl start cwbot
+```
+Посмотреть логи бота
+
+```
+journalctl -u cwbot.service
+```
 
 
 
