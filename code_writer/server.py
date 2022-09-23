@@ -5,12 +5,14 @@ from aiogram.types.message import ContentType
 from app.create_bot import dp, bot
 from aiogram import executor, types
 from db import db
+from pycoingecko import CoinGeckoAPI
 
 logging.basicConfig(level=logging.INFO)
 
 PATH_TO_DB_FILE = os.path.join("", "db/code_writer.db")
 my_orm = db.Database(PATH_TO_DB_FILE)
 LiqPay_TOKEN = '632593626:TEST:sandbox_i15590008377'
+cg = CoinGeckoAPI()
 
 
 def days_to_seconds(days):
@@ -39,7 +41,7 @@ def time_sub_last_days(get_time_db):
 @dp.message_handler(commands=['start'])
 async def start_and_register(message: types.Message):
     """
-    if our user is not yet registered (not found in his database), then register him..
+    if our user is not yet registered (not found in his database), then register him...
     else it was found in the database - we send him SMS warning that he is already registered
     """
     if not my_orm.user_exist(message.from_user.id):  # это айдишник пользователя в телеге
@@ -68,7 +70,7 @@ async def bot_msg(message: types.Message):
 
             user_sub = time_sub_last_days(my_orm.get_time_subscription(message.from_user.id))
             if user_sub == False:
-                user_sub = "You don't have any subscription yet"
+                user_sub = "\nYou don't have any subscription yet"
             else:
                 user_sub = "\nSubscription: " + user_sub
             await bot.send_message(message.from_user.id, "Your nickname is " + nickname + user_sub)
@@ -77,12 +79,20 @@ async def bot_msg(message: types.Message):
             await bot.send_message(message.from_user.id, "You can get something with the month subscription",
                                    reply_markup=nav.sub_inline_markup)
 
-        elif message.text == '✅️SUBSCRIDED FUNC':
+        # elif message.text == '✅️SUBSCRIDED FUNC':
+        #     if my_orm.get_time_subscription_bool(message.from_user.id):
+        #         """т.е. если у юзера есть подписка - мы что-то делаем"""
+        #         await bot.send_message(message.from_user.id, "You got the access!")
+        #     else:
+        #         await bot.send_message(message.from_user.id, "Buy month subscription")
+
+        elif message.text == '💰 COINS':
             if my_orm.get_time_subscription_bool(message.from_user.id):
                 """т.е. если у юзера есть подписка - мы что-то делаем"""
-                await bot.send_message(message.from_user.id, "You got the access!")
+                await bot.send_message(message.from_user.id, "You got the access to coins",
+                                       reply_markup=nav.crypto_list)
             else:
-                await bot.send_message(message.from_user.id, "Buy month subscription")
+                await bot.send_message(message.from_user.id, "Buy the month subscription for getting access to coins 💰")
 
 
         else:
@@ -97,11 +107,22 @@ async def bot_msg(message: types.Message):
                     # попдая в данное условие - пользователь прошел проверки.. назнаем его новый ник
                     my_orm.set_nickname(message.from_user.id, message.text)
                     my_orm.set_sign_up_stage(message.from_user.id, "done")
-                    await bot.send_message(message.from_user.id, "Регистрация прошла успешно",
+                    await bot.send_message(message.from_user.id, f"Hi, {message.text} 😀",
                                            reply_markup=nav.main_menu)
-            else:
-                # а если пользх  ователь уже прошел "этап регистрации" и написал что-то непонятное в диалог
+            else:  # а если пользх  ователь уже прошел "этап регистрации" и написал что-то непонятное в диалог
                 await bot.send_message(message.from_user.id, "wtf?")
+
+
+@dp.callback_query_handler(text_contains='cc_')
+async def crupto_currency(callback: types.CallbackQuery):
+    await bot.delete_message(callback.from_user.id, callback.message.message_id)
+    callback_data = callback.data
+    currency = str(callback_data[3:])
+    result = cg.get_price(ids=currency, vs_currencies='usd')
+    await bot.send_message(callback.from_user.id,
+                           f'Cryptocoin: {currency}\n'
+                           f'Cost at the time: {result[currency]["usd"]}$',
+                           reply_markup=nav.crypto_list)
 
 
 @dp.callback_query_handler(text='submonth')

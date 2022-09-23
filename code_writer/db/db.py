@@ -41,7 +41,7 @@ class Database:
         """check if user exist at current time"""
         with self.connection:
             result = self.cursor.execute(
-                "SELECT * FROM 'users' WHERE 'user_id' = ?", (user_id,)
+                "SELECT * FROM users WHERE user_id = ?", (user_id,)
             ).fetchall()  # получаем все поля, которое поле user_id равно тому user_id, которое мы передали
             return bool(len(result))  # прикольный возрат тру/фолса, от результата длины списка на истинность
 
@@ -88,7 +88,9 @@ class Database:
             for row in result:
                 if row[0] is not None:
                     time_sub = int(row[0])
-            return time_sub
+                    return time_sub
+                else:
+                    return False
 
     def get_time_subscription_bool(self, user_id):
         """get subscription of user"""
@@ -98,8 +100,8 @@ class Database:
                 if row[0] is not None:
                     time_sub = row[0]
 
-            if int(time_sub) > (time.time()):
-                # если время подписки  больше нынешнего - возращаем тру - т.е. подписка есть
-                return True
-            else:
-                return False
+                    if int(time_sub) > (time.time()):
+                        # если время подписки  больше нынешнего - возращаем тру - т.е. подписка есть
+                        return True
+                else:
+                    return False
