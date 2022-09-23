@@ -105,3 +105,13 @@ class Database:
                         return True
                 else:
                     return False
+
+    def set_active(self, user_id, active):
+        """set the activity of user"""
+        with self.connection:
+            return self.cursor.execute("UPDATE users SET active = ? WHERE user_id = ?", (str(active), user_id))
+
+    def get_users(self):
+        """get users for send_mailing"""
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM users").fetchall()

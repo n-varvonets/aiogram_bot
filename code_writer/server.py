@@ -13,6 +13,7 @@ PATH_TO_DB_FILE = os.path.join("", "db/code_writer.db")
 my_orm = db.Database(PATH_TO_DB_FILE)
 LiqPay_TOKEN = '632593626:TEST:sandbox_i15590008377'
 cg = CoinGeckoAPI()
+ADMIN_ID = 402431758
 
 
 def days_to_seconds(days):
@@ -49,6 +50,32 @@ async def start_and_register(message: types.Message):
         await bot.send_message(message.from_user.id, "Set your nickname")
     else:
         await bot.send_message(message.from_user.id, "You is already registered", reply_markup=nav.main_menu)
+
+
+@dp.message_handler(commands=['send_mail'])
+async def send_mailing(message: types.Message):
+    """
+    Mails can send only admin(add checking on admin account).
+    # если после регистрации пользователь нажал заблокировать бота, то мы не сможем ему отправить смс..
+    # поэтому try.. и в если пометить его неактивным, а если смс отправиться, хотя он был неактивным,
+    # тогда сделаем его активным
+    после чего уведомляем админа об успешной рассылке
+    * message_handler следует поместить выше хендлера отлавливания простого текста
+    """
+    if message.chat.type == 'private':
+        if message.from_user.id == ADMIN_ID:
+            text = message.text[
+                   :11]  # получаем текст сообщания от админа и срезаем первые 11 букв ['send_mail'] 9 + пробел(\n)
+            users = my_orm.get_users()
+            for row in users:
+                try:
+                    await bot.send_message(row[0], text)  # row[0] - айдишник пользователя
+                    if int(row['active']) != 1:
+                        my_orm.set_active(row[0], 1)
+                except:
+                    my_orm.set_active(row[0], 0)
+
+            await bot.send_message(message.from_user.id, "Sending mails - done")
 
 
 @dp.message_handler()
