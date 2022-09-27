@@ -16,7 +16,7 @@ class Database:
 
     def _init_db(self):
         """Инициализирует БД"""
-        # path_to_db_sql = "/home/db/createdb.sql"  # for docker
+        # path_to_db_sql = "/home/db/create_db_lita.sql"  # for docker
         with open(PATH_TO_DB_SQL, "r") as f:
             sql = f.read()
         self.cursor.executescript(sql)
